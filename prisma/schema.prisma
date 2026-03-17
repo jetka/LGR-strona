@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String   // Hashed password
+  role      Role     @default(ADMIN)
+  posts     Post[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  MEDIA
+  STARTY
+  WYDARZENIA
+  INNE
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  title     String
+  content   String   @db.Text
+  category  Category @default(STARTY)
+  gpxUrl    String?  // Map GPX route
+  videoUrl  String?  // MP4 Video URL
+  imageUrls String[] // Galleries
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RaceResult {
+  id        String   @id @default(uuid())
+  eventName String   // np. "Maraton MTB Limanowa 2024"
+  date      DateTime
+  name      String   // Imię i nazwisko zawodnika
+  category  String   // Kategoria (M2, M3 itp.)
+  time      String   // Czas (np. 02:14:30)
+  position  Int      // Zajęte miejsce
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
