@@ -33,6 +33,7 @@ enum Category {
 
 model Post {
   id        String   @id @default(uuid())
+  slug      String   @unique @default(uuid())
   title     String
   content   String   @db.Text
   category  Category @default(STARTY)
