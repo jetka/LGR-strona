@@ -11,20 +11,25 @@ async function main() {
     return;
   }
 
-  // Create default article
+  // Create default article - rich content
   await prisma.post.create({
     data: {
       category: "STARTY",
       title: "IV Czasówka Rowerowa pod Ostrą",
-      content: `IV Czasówka Rowerowa pod Ostrą odbędzie się 27 lipca 2025 roku, oferując 6,5 km wspinaczki ze stadionu w Starej Wsi, z 331 m przewyższenia i średnim nachyleniem powyżej 5%. To popularne kolarskie wyzwanie organizowane przez Limanowską Grupa Rowerową, z czasami najlepszych wynoszącymi ok. 14,5 minuty.<br/><br/>
-<b>Najważniejsze informacje o imprezie:</b>
+      content: `<p>Już po raz czwarty miłośnicy kolarstwa zmierzą się z jednym z najbardziej charakterystycznych podjazdów w regionie. <strong>IV Czasówka Rowerowa pod Ostrą</strong> to nie tylko wyścig — to prawdziwy sprawdzian charakteru, siły nóg i mentalnej odporności na każdym z 6,5 kilometrów trasy.</p>
+
+<p>Start zlokalizowany jest przy stadionie sportowym w Starej Wsi, skąd zawodnicy ruszają w kierunku malowniczej przełęczy. Trasa oferuje <strong>331 metrów przewyższenia</strong> przy średnim nachyleniu przekraczającym 5%, z fragmentami dochodzącymi do 9%. Najlepsi pokonują dystans w okolicach <em>14,5 minuty</em> — i właśnie te minuty są absolutnie bezlitosne.</p>
+
+<p><strong>Kluczowe informacje:</strong></p>
 <ul>
-  <li><b>Termin:</b> 27 lipca 2025 r. (niedziela) Limanowa.in.</li>
-  <li><b>Miejsce startu:</b> Stadion sportowy w Starej Wsi.</li>
-  <li><b>Trasa:</b> 6,5 km, wjazd na przełęcz pod Ostrą, 331 m przewyższenia, średnio ponad 5% nachylenia.</li>
-  <li><b>Organizator:</b> Limanowska Grupa Rowerowa. </li>
-</ul><br/>
-Wydarzenie przyciąga pasjonatów kolarstwa szosowego i górskiego, oferując rywalizację w malowniczych okolicach Limanowej Facebook. Warto odróżnić ją od samochodowego Wyścigu Górskiego Limanowa (GSMP), który odbywa się na tej samej trasie.`,
+  <li><strong>Data:</strong> 27 lipca 2025 roku (niedziela)</li>
+  <li><strong>Start:</strong> Stadion sportowy w Starej Wsi, godz. 10:00</li>
+  <li><strong>Dystans:</strong> 6,5 km z 331 m przewyższenia</li>
+  <li><strong>Organizator:</strong> Limanowska Grupa Rowerowa</li>
+  <li><strong>Wpisowe:</strong> bezpłatne dla członków LGR</li>
+</ul>
+
+<p>Zawody rozgrywane są w pięknych okolicznościach przyrody Beskidu Wyspowego. Kibice mogą obserwować zmagania wzdłuż całej trasy, a na mecie każdego zawodnika czeka zasłużony odpoczynek i poczęstunek przygotowany przez ekipę LGR.</p>`,
       authorId: author.id,
     },
   });

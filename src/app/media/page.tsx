@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import MediaGrid from "@/components/MediaGrid";
 
-export const revalidate = 60; // Regenerate page every 60 seconds
+export const revalidate = 0;
 
 export default async function MediaPage() {
   const posts = await prisma.post.findMany({

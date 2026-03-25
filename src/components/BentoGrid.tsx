@@ -12,7 +12,7 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 };
 
-export default function BentoGrid() {
+export default function BentoGrid({ latestRoute }: { latestRoute?: any }) {
   return (
     <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-24 selection:bg-[var(--color-lgr-red)] selection:text-white">
       <motion.div 
@@ -46,9 +46,9 @@ export default function BentoGrid() {
         {/* Square Item: GPX Map */}
         <motion.div 
           variants={itemVariants}
-          className="col-span-1 md:col-span-2 row-span-1 md:row-span-1 rounded-3xl border border-white/5 relative bg-[#1A1A1A]"
+          className="col-span-1 md:col-span-2 row-span-1 md:row-span-1 rounded-3xl border border-white/5 relative bg-[#1A1A1A] overflow-hidden group hover:border-[var(--color-lgr-red)]/50 transition-colors"
         >
-          <GPXMap />
+          <GPXMap route={latestRoute} />
         </motion.div>
 
         {/* Standard Video item */}

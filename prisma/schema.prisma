@@ -43,6 +43,9 @@ model Post {
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
   published Boolean  @default(false)
+  distance  Float?   
+  elevation Float?   
+  routeData Json?    
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
