@@ -46,7 +46,7 @@ export default function ArticleView({ post }: { post: any }) {
 
     const closeLightbox = () => setSelectedImage(null);
 
-    const heroImage = images[0] || FALLBACK_IMAGES[0];
+    const heroImage = post.category === "INNE" ? "/trasyBG.jpg" : (images[0] || FALLBACK_IMAGES[0]);
 
     return (
         <div className="w-full bg-transparent min-h-screen text-gray-200 relative z-10 pb-32">
@@ -157,7 +157,7 @@ export default function ArticleView({ post }: { post: any }) {
                     {/* Editor Content */}
                     <div className="md:col-span-8 lg:col-span-9">
                             <div
-                                className="text-gray-300 text-lg md:text-xl leading-relaxed font-sans prose prose-invert max-w-none prose-p:mb-8 prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-strong:text-white prose-a:text-[var(--color-lgr-red)] prose-img:rounded-2xl"
+                                className="text-gray-200 text-lg md:text-xl leading-relaxed font-sans prose prose-invert max-w-none prose-p:mb-8 prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-strong:text-white prose-a:text-[var(--color-lgr-red)] prose-img:rounded-2xl"
                                 dangerouslySetInnerHTML={{ __html: post.content }}
                             />
                         </div>

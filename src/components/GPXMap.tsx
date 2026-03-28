@@ -81,7 +81,7 @@ export default function GPXMap({ route, disableLink = false }: { route?: any, di
   }
 
   return route ? (
-    <Link href={`/${route.category.toLowerCase()}/${route.slug}`} className="block w-full h-full">
+    <Link href={route.category === "INNE" ? `/trasy/${route.slug}` : `/${route.category.toLowerCase()}/${route.slug}`} className="block w-full h-full">
       {mapContent}
     </Link>
   ) : mapContent;

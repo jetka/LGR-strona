@@ -5,28 +5,56 @@ import ResultsTable from "@/components/ResultsTable";
 import HomeLatestPosts from "@/components/HomeLatestPosts";
 import PartnersTicker from "@/components/PartnersTicker";
 
-export const revalidate = 0;
+// ISR: regenerate every 60 seconds instead of on every request
+export const revalidate = 60;
+
+// Select only the fields we actually need for the homepage cards
+const cardSelect = {
+  id: true,
+  slug: true,
+  title: true,
+  category: true,
+  imageUrls: true,
+  videoUrl: true,
+  createdAt: true,
+  content: true,
+} as const;
 
 export default async function Home() {
-  // Fetch latest posts from all editorial sections
-  const latestPosts = await prisma.post.findMany({
-    where: { category: { in: ["STARTY", "WYDARZENIA", "INNE"] } },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-  });
+  // Run ALL queries in parallel instead of sequentially
+  const [latestPosts, latestRouteRaw, latestStartRaw, latestMediaRaw, latestEventRaw] = await Promise.all([
+    prisma.post.findMany({
+      where: { category: { in: ["STARTY", "WYDARZENIA", "INNE"] } },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: cardSelect,
+    }),
+    prisma.post.findFirst({
+      where: { gpxUrl: { not: null }, routeData: { not: null } },
+      orderBy: { createdAt: "desc" },
+      select: { ...cardSelect, routeData: true, gpxUrl: true, distance: true, elevation: true },
+    }),
+    prisma.post.findFirst({
+      where: { category: "STARTY" },
+      orderBy: { createdAt: "desc" },
+      select: cardSelect,
+    }),
+    prisma.post.findFirst({
+      where: { category: "MEDIA" },
+      orderBy: { createdAt: "desc" },
+      select: cardSelect,
+    }),
+    prisma.post.findFirst({
+      where: { category: "WYDARZENIA" },
+      orderBy: { createdAt: "desc" },
+      select: cardSelect,
+    }),
+  ]);
 
-  // Fetch the latest route that has GPX data
-  const latestRouteRaw = await prisma.post.findFirst({
-    where: { 
-      category: "INNE",
-      gpxUrl: { not: null },
-      routeData: { not: null }
-    },
-    orderBy: { createdAt: "desc" }
-  });
-  
-  // Need to parse JsonValue nicely or just pass as any
   const latestRoute = latestRouteRaw as any;
+  const latestStart = latestStartRaw as any;
+  const latestMedia = latestMediaRaw as any;
+  const latestEvent = latestEventRaw as any;
 
   return (
     <div className="w-full bg-black min-h-screen">
@@ -35,7 +63,12 @@ export default async function Home() {
       </div>
 
       <main className="w-full relative z-20">
-        <BentoGrid latestRoute={latestRoute} />
+        <BentoGrid 
+          latestRoute={latestRoute} 
+          latestStart={latestStart}
+          latestMedia={latestMedia}
+          latestEvent={latestEvent}
+        />
 
         {/* Latest articles section */}
         <HomeLatestPosts posts={latestPosts} />

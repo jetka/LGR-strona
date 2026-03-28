@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Play, Calendar, ArrowUpDown, Film, Image as ImageIcon } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 const FALLBACK_IMAGES = [
     "http://localhost:8080/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
@@ -11,7 +11,8 @@ const FALLBACK_IMAGES = [
     "http://localhost:8080/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
 ];
 
-function formatDate(date: Date) {
+function formatDate(date: Date, isMounted: boolean) {
+    if (!isMounted) return "";
     return new Date(date).toLocaleDateString("pl-PL", {
         day: "2-digit",
         month: "long",
@@ -19,13 +20,15 @@ function formatDate(date: Date) {
     });
 }
 
-function MediaCard({ post, index, isFeatured }: { post: any; index: number; isFeatured: boolean }) {
+function MediaCard({ post, index, isFeatured, isMounted }: { post: any; index: number; isFeatured: boolean; isMounted: boolean }) {
     const coverImage = post.imageUrls?.[0] || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
     const hasVideo = !!post.videoUrl;
 
     const containerClasses = isFeatured
         ? "col-span-1 sm:col-span-2 lg:col-span-2 row-span-2"
         : "col-span-1 row-span-1";
+
+    if (!isMounted) return <div className={containerClasses} />;
 
     return (
         <motion.div
@@ -78,10 +81,9 @@ function MediaCard({ post, index, isFeatured }: { post: any; index: number; isFe
                         )}
                     </div>
 
-                    {/* Date */}
                     <div className="flex items-center gap-1.5 mb-2 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
                         <Calendar size={10} className="text-[var(--color-lgr-red)]" />
-                        {formatDate(post.createdAt)}
+                        {formatDate(post.createdAt, isMounted)}
                     </div>
 
                     {/* Title */}
@@ -116,7 +118,33 @@ function MediaCard({ post, index, isFeatured }: { post: any; index: number; isFe
 export default function MediaGrid({ posts }: { posts: any[] }) {
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az">("newest");
     const [yearFilter, setYearFilter] = useState<string>("all");
-    const [typeFilter, setTypeFilter] = useState<"all" | "video" | "photo">("all");
+    const [showVideo, setShowVideo] = useState(true);
+    const [showPhoto, setShowPhoto] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    const toggleType = (type: "video" | "photo") => {
+        if (type === "video") {
+            const next = !showVideo;
+            if (!next && !showPhoto) {
+                setShowVideo(true);
+                setShowPhoto(true);
+            } else {
+                setShowVideo(next);
+            }
+        } else {
+            const next = !showPhoto;
+            if (!next && !showVideo) {
+                setShowVideo(true);
+                setShowPhoto(true);
+            } else {
+                setShowPhoto(next);
+            }
+        }
+    };
 
     const availableYears = useMemo(() => {
         const years = [...new Set(posts.map(p => new Date(p.createdAt).getFullYear()))];
@@ -132,8 +160,12 @@ export default function MediaGrid({ posts }: { posts: any[] }) {
         }
 
         // Type filter
-        if (typeFilter === "video") result = result.filter(p => !!p.videoUrl);
-        if (typeFilter === "photo") result = result.filter(p => !p.videoUrl && p.imageUrls?.length > 0);
+        if (showVideo && !showPhoto) {
+            result = result.filter(p => !!p.videoUrl);
+        } else if (!showVideo && showPhoto) {
+            result = result.filter(p => !p.videoUrl);
+        }
+        // If both true or both false (due to logic handled in toggle) - show all filtered by year/sort only
 
         // Sort
         switch (sortBy) {
@@ -149,94 +181,94 @@ export default function MediaGrid({ posts }: { posts: any[] }) {
         }
 
         return result;
-    }, [posts, sortBy, yearFilter, typeFilter]);
+    }, [posts, sortBy, yearFilter, showVideo, showPhoto]);
 
     return (
         <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-24 min-h-screen text-gray-200">
 
             {/* ── HEADER ── */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
-                <div>
-                    <span className="text-[var(--color-lgr-red)] text-xs font-black uppercase tracking-[0.2em] mb-2 block">
-                        Exclusive Gallery
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-8 border-b border-white/5 gap-4">
+                <div className="text-center md:text-left">
+                    <span className="text-[var(--color-lgr-red)] text-[10px] font-black uppercase tracking-[0.4em] block mb-1 opacity-50">
+                        Galeria Multimedialna
                     </span>
-                    <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none">
-                        Media
+                    <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">
+                        Media <span className="text-[var(--color-lgr-red)]">LGR</span>
                     </h1>
                 </div>
 
-                {/* Controls */}
-                <div className="flex flex-wrap items-center gap-3">
-                    {/* Sort */}
-                    <div className="relative">
+                {/* Controls - right top */}
+                <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 md:gap-4">
+                    {/* Media Switches */}
+                    <div className="flex items-center gap-2 bg-white/[0.03] border border-white/5 p-1 rounded-xl">
+                        <button
+                            onClick={() => toggleType("video")}
+                            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all h-8 whitespace-nowrap
+                                ${showVideo 
+                                    ? "bg-[var(--color-lgr-red)] text-white shadow-lg shadow-red-900/20" 
+                                    : "text-gray-500 hover:text-gray-300 hover:bg-white/5"}`}
+                        >
+                            <Film size={12} /> Video
+                        </button>
+                        <button
+                            onClick={() => toggleType("photo")}
+                            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all h-8 whitespace-nowrap
+                                ${showPhoto 
+                                    ? "bg-[var(--color-lgr-red)] text-white shadow-lg shadow-red-900/20" 
+                                    : "text-gray-500 hover:text-gray-300 hover:bg-white/5"}`}
+                        >
+                            <ImageIcon size={12} /> Zdjęcia
+                        </button>
+                    </div>
+
+                    <div className="w-px h-6 bg-white/10 hidden md:block" />
+
+                    <div className="relative group">
                         <select
                             value={sortBy}
                             onChange={e => setSortBy(e.target.value as any)}
-                            className="appearance-none bg-black/50 border border-white/10 rounded-lg
-                         px-5 py-3 pr-9 text-sm font-bold uppercase tracking-wider text-white
-                         hover:bg-white/5 transition-colors focus:outline-none focus:border-[var(--color-lgr-red)] cursor-pointer"
+                            className="appearance-none bg-[#141414] border border-white/10 rounded-xl px-4 pr-10 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-white/20 transition-all focus:outline-none focus:border-[var(--color-lgr-red)] cursor-pointer h-10 min-w-[130px]"
                         >
-                            <option value="newest">Najnowsze</option>
-                            <option value="oldest">Najstarsze</option>
-                            <option value="az">A → Z</option>
+                            <option value="newest" className="bg-[#141414] text-white">Najnowsze</option>
+                            <option value="oldest" className="bg-[#141414] text-white">Najstarsze</option>
+                            <option value="az" className="bg-[#141414] text-white">A → Z</option>
                         </select>
-                        <ArrowUpDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <ArrowUpDown size={12} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none group-hover:text-[var(--color-lgr-red)] transition-colors" />
                     </div>
 
-                    {/* Year */}
-                    <div className="relative">
+                    <div className="relative group">
                         <select
                             value={yearFilter}
                             onChange={e => setYearFilter(e.target.value)}
-                            className="appearance-none bg-black/50 border border-white/10 rounded-lg
-                         px-5 py-3 pr-9 text-sm font-bold uppercase tracking-wider text-white
-                         hover:bg-white/5 transition-colors focus:outline-none focus:border-[var(--color-lgr-red)] cursor-pointer"
+                            className="appearance-none bg-[#141414] border border-white/10 rounded-xl px-4 pr-10 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-white/20 transition-all focus:outline-none focus:border-[var(--color-lgr-red)] cursor-pointer h-10 min-w-[130px]"
                         >
-                            <option value="all">Wszystkie lata</option>
-                            {availableYears.map(y => <option key={y} value={String(y)}>{y}</option>)}
+                            <option value="all" className="bg-[#141414] text-white">Wszystkie lata</option>
+                            {availableYears.map(y => (
+                                <option key={y} value={String(y)} className="bg-[#141414] text-white">{y}</option>
+                            ))}
                         </select>
-                        <Calendar size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                    </div>
-
-                    {/* Type filter — unique to Media */}
-                    <div className="flex gap-2">
-                        {[
-                            { value: "all", label: "Wszystko" },
-                            { value: "video", label: "Wideo", icon: <Film size={13} /> },
-                            { value: "photo", label: "Zdjęcia", icon: <ImageIcon size={13} /> },
-                        ].map(opt => (
-                            <button
-                                key={opt.value}
-                                onClick={() => setTypeFilter(opt.value as any)}
-                                className={`flex items-center gap-1.5 px-4 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-colors border
-                            ${typeFilter === opt.value
-                                        ? "bg-[var(--color-lgr-red)] border-[var(--color-lgr-red)] text-white"
-                                        : "bg-black/50 border-white/10 text-gray-300 hover:bg-white/5"
-                                    }`}
-                            >
-                                {opt.icon ?? null}
-                                {opt.label}
-                            </button>
-                        ))}
+                        <Calendar size={12} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none group-hover:text-[var(--color-lgr-red)] transition-colors" />
                     </div>
                 </div>
             </div>
 
             {/* Result count */}
-            <p className="text-gray-500 text-sm mb-8">
-                {filtered.length === 0
-                    ? "Brak wyników"
-                    : `${filtered.length} ${filtered.length === 1 ? "materiał" : filtered.length < 5 ? "materiały" : "materiałów"}`}
-            </p>
+            <div className="flex justify-between items-center mb-10">
+                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                    {filtered.length === 0
+                        ? "Brak wyników"
+                        : `${filtered.length} ${filtered.length === 1 ? "materiał" : filtered.length < 5 ? "materiały" : "materiałów"}`}
+                </p>
+            </div>
 
-            {/* ── GRID ── */}
+            {/* ── CONTENT GRID ── */}
             {filtered.length === 0 ? (
                 <p className="text-gray-500 py-16">Brak materiałów spełniających kryteria.</p>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[260px] md:auto-rows-[300px]">
                     <AnimatePresence mode="popLayout">
                         {filtered.map((post, i) => (
-                            <MediaCard key={post.id} post={post} index={i} isFeatured={i === 0} />
+                            <MediaCard key={post.id} post={post} index={i} isFeatured={(!showVideo || !showPhoto) && i === 0} isMounted={isMounted} />
                         ))}
                     </AnimatePresence>
                 </div>

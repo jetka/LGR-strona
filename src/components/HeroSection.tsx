@@ -30,7 +30,9 @@ export default function HeroSection() {
             src="/video/intro.mp4"
             autoPlay
             muted
+            loop
             playsInline
+            preload="metadata"
             className="w-full h-auto max-h-[40vh] object-contain drop-shadow-[0_0_20px_rgba(180,0,15,0.3)]"
           />
         </motion.div>

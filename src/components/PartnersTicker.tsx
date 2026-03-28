@@ -3,12 +3,12 @@
 import { motion } from "framer-motion";
 
 const PARTNERS = [
-  { name: "Gmina Słopnice", logo: "SŁOPNICE" },
-  { name: "LGR Limanowa", logo: "LGR" },
-  { name: "Małopolska", logo: "MAŁOPOLSKA" },
-  { name: "Poczuj Radość", logo: "RADOŚĆ" },
-  { name: "Bike Limanowa", logo: "BIKE" },
-  { name: "Miodunka", logo: "MIODUNKA" },
+  { name: "Gmina Słopnice", logo: "http://localhost:8080/sponsorzy/slopnice.png" },
+  { name: "Sportman", logo: "http://localhost:8080/sponsorzy/sportman.png" },
+  { name: "LGR Limanowa", text: "LGR" },
+  { name: "Małopolska", text: "MAŁOPOLSKA" },
+  { name: "Bike Limanowa", text: "BIKE" },
+  { name: "LGR Team", text: "#LGRTEAM" },
 ];
 
 export default function PartnersTicker() {
@@ -34,11 +34,15 @@ export default function PartnersTicker() {
           {tickerItems.map((partner, index) => (
             <div 
               key={index} 
-              className="flex items-center justify-center grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default"
+              className="flex items-center justify-center grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default h-20 md:h-28"
             >
-              <span className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic">
-                {partner.logo}
-              </span>
+              {partner.logo ? (
+                <img src={partner.logo} alt={partner.name} className="h-full w-auto object-contain px-2 md:px-4" />
+              ) : (
+                <span className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter italic mr-4">
+                  {partner.text}
+                </span>
+              )}
             </div>
           ))}
         </motion.div>

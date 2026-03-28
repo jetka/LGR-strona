@@ -61,3 +61,14 @@ model RaceResult {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model AdminLog {
+  id        String   @id @default(uuid())
+  email     String
+  ip        String
+  userAgent String?
+  success   Boolean  @default(true)
+  action    String   @default("LOGIN") // LOGIN, LOGOUT, UPLOAD, DELETE
+  details   String?
+  createdAt DateTime @default(now())
+}

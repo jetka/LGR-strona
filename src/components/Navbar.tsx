@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
+  { name: "Home", href: "/" },
   { name: "O Nas", href: "/o-nas" },
   { name: "Trasy", href: "/trasy" },
   { name: "Media", href: "/media" },
@@ -111,21 +112,8 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* CTA & Mobile Toggle */}
+          {/* Mobile Toggle */}
           <div className="flex items-center gap-4 relative z-[110]">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden md:block"
-            >
-              <Link 
-                href="/dolacz" 
-                className="px-8 py-3 bg-[var(--color-lgr-red)] text-white font-black uppercase tracking-widest text-[10px] rounded-sm shadow-[0_0_20px_rgba(180,0,15,0.3)] hover:shadow-[0_0_30px_rgba(180,0,15,0.5)] transition-all"
-              >
-                Dołącz do nas
-              </Link>
-            </motion.div>
-
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden text-white p-2 hover:text-[var(--color-lgr-red)] transition-colors"
@@ -177,20 +165,6 @@ export default function Navbar() {
                 </Link>
               </motion.div>
             </div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="mt-12"
-            >
-              <Link 
-                href="/dolacz" 
-                className="w-full py-5 bg-[var(--color-lgr-red)] text-white font-black uppercase tracking-widest text-center block rounded"
-              >
-                Dołącz do Limanowskiej Grupy
-              </Link>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

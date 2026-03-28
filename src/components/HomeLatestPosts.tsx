@@ -64,9 +64,10 @@ export default function HomeLatestPosts({ posts }: { posts: any[] }) {
             {/* Cards grid — same PostCard style */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {posts.map((post, i) => {
-                    const img = post.imageUrls?.[0] || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length];
+                    const isRoute = post.category === "INNE";
+                    const img = post.imageUrls?.[0] || (isRoute ? "/trasyBG.jpg" : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]);
                     const basePath = CATEGORY_PATHS[post.category] || "starty";
-                    const label = CATEGORY_LABELS[post.category] || post.category;
+                    const label = isRoute ? "TRASY" : (CATEGORY_LABELS[post.category] || post.category);
 
                     return (
                         <motion.div

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { revalidatePath } from "next/cache";
+import { postSchema, deletePostSchema } from "@/lib/validations";
 import fs from "fs";
 import path from "path";
 import slugify from "slugify";
@@ -14,9 +15,28 @@ export async function savePost(formData: FormData, postId?: string) {
     throw new Error("Unauthorized");
   }
 
-  const title = formData.get("title") as string;
-  const content = formData.get("content") as string;
-  const category = formData.get("category") as "MEDIA" | "STARTY" | "WYDARZENIA" | "INNE";
+  // ── Role enforcement ──
+  if ((session.user as any).role !== "ADMIN") {
+    throw new Error("Brak uprawnień administratora");
+  }
+
+  const rawTitle = formData.get("title") as string;
+  const rawContent = formData.get("content") as string;
+  const rawCategory = formData.get("category") as string;
+
+  // ── Zod Validation ──
+  const validation = postSchema.safeParse({
+    title: rawTitle,
+    content: rawContent,
+    category: rawCategory,
+  });
+
+  if (!validation.success) {
+    const msg = validation.error.issues?.[0]?.message || "Nieprawidłowe dane";
+    throw new Error(msg);
+  }
+
+  const { title, content, category } = validation.data;
   const gpxUrl = formData.get("gpxUrl") as string;
 
   let videoUrl = formData.get("videoUrl") as string | undefined;
@@ -62,6 +82,7 @@ export async function savePost(formData: FormData, postId?: string) {
   revalidatePath("/starty");
   revalidatePath("/media");
   revalidatePath("/wydarzenia");
+  revalidatePath("/trasy");
   revalidatePath("/admin");
 }
 
@@ -71,10 +92,23 @@ export async function deletePost(postId: string) {
     throw new Error("Unauthorized");
   }
 
-  await prisma.post.delete({ where: { id: postId } });
+  // ── Role enforcement ──
+  if ((session.user as any).role !== "ADMIN") {
+    throw new Error("Brak uprawnień administratora");
+  }
+
+  // ── Zod Validation ──
+  const validation = deletePostSchema.safeParse({ postId });
+  if (!validation.success) {
+    throw new Error("Nieprawidłowy identyfikator postu");
+  }
+
+  await prisma.post.delete({ where: { id: validation.data.postId } });
 
   revalidatePath("/starty");
   revalidatePath("/media");
   revalidatePath("/wydarzenia");
+  revalidatePath("/trasy");
   revalidatePath("/admin");
 }
+

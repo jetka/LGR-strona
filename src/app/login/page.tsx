@@ -10,6 +10,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Hidden anti-bot field
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +22,7 @@ export default function LoginPage() {
     const res = await signIn("credentials", {
       email,
       password,
+      honeypot, // Sent to server — bots fill this, humans don't
       redirect: false,
     });
 
@@ -74,6 +76,18 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-lgr-red)] focus:outline-none transition-colors"
+            />
+          </div>
+
+          {/* Honeypot — invisible to humans, bots auto-fill it */}
+          <div className="absolute -left-[9999px]" aria-hidden="true" tabIndex={-1}>
+            <input 
+              type="text" 
+              name="company_url"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
             />
           </div>
 
