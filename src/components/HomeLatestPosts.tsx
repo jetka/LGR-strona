@@ -3,11 +3,12 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Calendar } from "lucide-react";
+import { getMediaUrl } from "@/lib/media";
 
 const FALLBACK_IMAGES = [
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
+    "/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
+    "/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
+    "/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
 ];
 
 const CATEGORY_PATHS: Record<string, string> = {
@@ -65,7 +66,8 @@ export default function HomeLatestPosts({ posts }: { posts: any[] }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {posts.map((post, i) => {
                     const isRoute = post.category === "INNE";
-                    const img = post.imageUrls?.[0] || (isRoute ? "/trasyBG.jpg" : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]);
+                    const rawImg = post.imageUrls?.[0] || (isRoute ? "/trasyBG.jpg" : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]);
+                    const img = rawImg === "/trasyBG.jpg" ? rawImg : getMediaUrl(rawImg);
                     const basePath = CATEGORY_PATHS[post.category] || "starty";
                     const label = isRoute ? "TRASY" : (CATEGORY_LABELS[post.category] || post.category);
 
@@ -85,6 +87,10 @@ export default function HomeLatestPosts({ posts }: { posts: any[] }) {
                                     className="absolute inset-0 bg-cover bg-center transition-all duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
                                     style={{ backgroundImage: `url(${img})` }}
                                 />
+                                {/* DEBUG: Wyświetl URL jeśli nie widać obrazka (widoczne tylko przy błędzie/braku tła) */}
+                                <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 text-[8px] text-white/20 break-all pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {img}
+                                </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/10 group-hover:via-black/70 transition-all duration-500" />
                                 <div className="absolute bottom-0 left-0 h-[3px] w-0 bg-[var(--color-lgr-red)] group-hover:w-full transition-all duration-500 ease-out" />
 

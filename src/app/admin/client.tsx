@@ -8,6 +8,7 @@ import { signOut, useSession } from "next-auth/react";
 import axios from "axios";
 import { deletePost } from "./actions";
 import dynamic from "next/dynamic";
+import { getMediaUrl } from "@/lib/media";
 
 // Load editor only on client (it uses browser APIs)
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), { ssr: false });
@@ -30,6 +31,7 @@ export default function AdminClient({ initialPosts }: { initialPosts: any[] }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [posts, setPosts] = useState(initialPosts);
   const [files, setFiles] = useState<File[]>([]);
+  const [existingMedia, setExistingMedia] = useState<{ url: string, type: 'image' | 'video' | 'gpx' }[]>([]);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [successMsg, setSuccessMsg] = useState("");
@@ -56,15 +58,14 @@ export default function AdminClient({ initialPosts }: { initialPosts: any[] }) {
 
   const removeFile = (index: number) => setFiles(prev => prev.filter((_, i) => i !== index));
 
-  // ── Open editor to CREATE ──
   const openNew = () => {
     setForm(EMPTY_FORM);
     setFiles([]);
+    setExistingMedia([]);
     setProgress(0);
     setView("editor");
   };
 
-  // ── Open editor to EDIT ──
   const openEdit = (post: any) => {
     setForm({
       id: post.id,
@@ -73,6 +74,16 @@ export default function AdminClient({ initialPosts }: { initialPosts: any[] }) {
       content: post.content,
       category: post.category,
     });
+    
+    // Pobieramy istniejące pliki, aby admin mógł u siebie widzieć miniatury
+    const tempExisting: { url: string, type: 'image' | 'video' | 'gpx' }[] = [];
+    if (post.videoUrl) tempExisting.push({ url: post.videoUrl, type: 'video' });
+    if (post.imageUrls && Array.isArray(post.imageUrls)) {
+      post.imageUrls.forEach((img: string) => tempExisting.push({ url: img, type: 'image' }));
+    }
+    if (post.gpxUrl) tempExisting.push({ url: post.gpxUrl, type: 'gpx' });
+    
+    setExistingMedia(tempExisting);
     setFiles([]);
     setProgress(0);
     setView("editor");
@@ -100,6 +111,9 @@ export default function AdminClient({ initialPosts }: { initialPosts: any[] }) {
     formData.append("content", form.content);
     formData.append("category", form.category);
     if (form.id) formData.append("postId", form.id);
+
+    // Wysyłamy, które stare pliki mają być zachowane
+    existingMedia.forEach(media => formData.append('retainedMedia', media.url));
 
     // Zapobiegamy błędom parsera undici poprzez unikalne klucze dla każdego pliku
     files.forEach((file, index) => formData.append(`media_${index}`, file));
@@ -395,38 +409,79 @@ export default function AdminClient({ initialPosts }: { initialPosts: any[] }) {
                     </div>
 
                     {/* File previews */}
-                    {files.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mt-3">
-                        {files.map((file, idx) => {
-                              const isVideo = file.type.startsWith("video/");
-                              const isGPX = file.name.toLowerCase().endsWith(".gpx");
-                              const url = URL.createObjectURL(file);
-                              return (
-                                <div key={idx} className="relative aspect-square rounded overflow-hidden bg-black border border-white/10 group">
-                                  <button
-                                    type="button"
-                                    onClick={() => removeFile(idx)}
-                                    className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white rounded p-0.5 z-10 transition-colors"
-                                  >
-                                    <X size={10} />
-                                  </button>
-                                  {isVideo ? (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <Film size={24} className="text-gray-500" />
-                                    </div>
-                                  ) : isGPX ? (
-                                    <div className="w-full h-full flex items-center justify-center bg-blue-900/20">
-                                      <div className="flex flex-col items-center gap-1">
-                                        <Plus size={20} className="text-blue-400 rotate-45" />
-                                        <span className="text-[8px] font-black text-blue-400 uppercase">GPX</span>
+                    {(files.length > 0 || existingMedia.length > 0) && (
+                      <div className="bg-[#141414] border border-white/5 rounded-2xl p-4 mt-4">
+                        <h3 className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-3 flex items-center gap-2">
+                           Załączone materiały <span className="px-1.5 py-0.5 rounded bg-white/5">{existingMedia.length + files.length}</span>
+                        </h3>
+
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                            {/* Stare, zachowane pliki z bazy */}
+                            {existingMedia.map((media, idx) => (
+                               <div key={`exist_${idx}`} className="relative aspect-square rounded overflow-hidden bg-black border border-white/5 hover:border-red-500/50 group transition-all">
+                                    <button
+                                        type="button"
+                                        onClick={() => setExistingMedia(prev => prev.filter((_, i) => i !== idx))}
+                                        className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white rounded p-1 z-10 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Usuń ten plik z bazy po zapisaniu"
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                    {media.type === 'video' ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-black/50">
+                                          <div className="flex flex-col items-center gap-1">
+                                             <Film size={20} className="text-gray-400" />
+                                             <span className="text-[8px] font-black text-gray-400 uppercase">Wideo (Baza)</span>
+                                          </div>
+                                        </div>
+                                    ) : media.type === 'gpx' ? (
+                                      <div className="w-full h-full flex items-center justify-center bg-blue-900/20">
+                                        <div className="flex flex-col items-center gap-1">
+                                          <Plus size={20} className="text-blue-400 rotate-45" />
+                                          <span className="text-[8px] font-black text-blue-400 uppercase">GPX (Baza)</span>
+                                        </div>
                                       </div>
+                                    ) : (
+                                      <img src={getMediaUrl(media.url)} className="w-full h-full object-cover opacity-80" alt="" />
+                                    )}
+                               </div>
+                            ))}
+
+                            {/* Nowo wrzucone pliki */}
+                            {files.map((file, idx) => {
+                                  const isVideo = file.type.startsWith("video/");
+                                  const isGPX = file.name.toLowerCase().endsWith(".gpx");
+                                  const url = URL.createObjectURL(file);
+                                  return (
+                                    <div key={`new_${idx}`} className="relative aspect-square rounded overflow-hidden bg-[var(--color-lgr-red)]/5 border border-[var(--color-lgr-red)]/30 group">
+                                      <button
+                                        type="button"
+                                        onClick={() => removeFile(idx)}
+                                        className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white rounded p-1 z-10 transition-colors opacity-0 group-hover:opacity-100"
+                                      >
+                                        <X size={12} />
+                                      </button>
+                                      {isVideo ? (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <div className="flex flex-col items-center gap-1">
+                                             <Film size={20} className="text-[var(--color-lgr-red)]" />
+                                             <span className="text-[8px] font-black text-[var(--color-lgr-red)] uppercase">Nowe wideo</span>
+                                          </div>
+                                        </div>
+                                      ) : isGPX ? (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <div className="flex flex-col items-center gap-1">
+                                            <Plus size={20} className="text-[var(--color-lgr-red)] rotate-45" />
+                                            <span className="text-[8px] font-black text-[var(--color-lgr-red)] uppercase">Nowy GPX</span>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <img src={url} className="w-full h-full object-cover" alt="" />
+                                      )}
                                     </div>
-                                  ) : (
-                                    <img src={url} className="w-full h-full object-cover" alt="" />
-                                  )}
-                                </div>
-                              );
-                        })}
+                                  );
+                            })}
+                        </div>
                       </div>
                     )}
                   </div>

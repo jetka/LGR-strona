@@ -6,21 +6,26 @@ import { X, ChevronLeft, ChevronRight, Download, Heart, Share2, ZoomIn, MapPin, 
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import ElevationChart from "./ElevationChart";
+import { getMediaUrl } from "@/lib/media";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
 const FALLBACK_IMAGES = [
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
+    "/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
+    "/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
+    "/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
 ];
 
 export default function ArticleView({ post }: { post: any }) {
     const [selectedImage, setSelectedImage] = useState<number | null>(null);
 
-    const images = post.imageUrls || [];
+    const rawImages = post.imageUrls && post.imageUrls.length > 0 ? post.imageUrls : [FALLBACK_IMAGES[0]];
+    const images = rawImages.map((img: string) => getMediaUrl(img));
+    
     const hasImages = images.length > 0;
     const hasVideo = !!post.videoUrl;
+    const videoUrl = getMediaUrl(post.videoUrl);
+    const gpxUrl = getMediaUrl(post.gpxUrl);
 
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString("pl-PL", {
@@ -125,7 +130,7 @@ export default function ArticleView({ post }: { post: any }) {
                             </div>
                             <div className="bg-[#111] border border-white/5 rounded-xl p-2 flex flex-col items-center justify-center text-center col-span-2 md:col-span-1">
                                 <a 
-                                    href={post.gpxUrl}
+                                    href={gpxUrl}
                                     download
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -183,10 +188,10 @@ export default function ArticleView({ post }: { post: any }) {
                                     className="w-full h-full object-cover"
                                 >
                                     <source
-                                        src={post.videoUrl!}
+                                        src={videoUrl}
                                         type={
-                                            post.videoUrl!.endsWith(".webm") ? "video/webm" :
-                                                post.videoUrl!.endsWith(".ogg") ? "video/ogg" :
+                                            videoUrl.endsWith(".webm") ? "video/webm" :
+                                                videoUrl.endsWith(".ogg") ? "video/ogg" :
                                                     "video/mp4"
                                         }
                                     />

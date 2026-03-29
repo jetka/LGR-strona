@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthProvider from "@/components/AuthProvider";
+import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "LGR - Limanowska Grupa Rowerowa",
@@ -37,6 +38,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <CookieBanner />
         </AuthProvider>
       </body>
     </html>

@@ -4,6 +4,7 @@ import { motion, Variants } from "framer-motion";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Users, CalendarDays, ArrowRight, Play } from "lucide-react";
+import { getMediaUrl } from "@/lib/media";
 
 // Dynamically import map to avoid window is not defined error
 const GPXMap = dynamic(() => import("./GPXMap"), { ssr: false });
@@ -40,7 +41,7 @@ export default function BentoGrid({
             className="w-full h-full bg-gradient-to-br from-[#1A1A1A] to-black rounded-3xl p-8 border border-white/5 flex flex-col justify-between relative overflow-hidden group hover:border-[var(--color-lgr-red)]/50 transition-colors"
           >
             {latestStart?.imageUrls?.[0] && (
-              <div className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity duration-700" style={{ backgroundImage: `url(${latestStart.imageUrls[0]})`}}></div>
+              <div className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity duration-700" style={{ backgroundImage: `url(${getMediaUrl(latestStart.imageUrls[0])})`}}></div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
             
@@ -74,10 +75,10 @@ export default function BentoGrid({
           >
             <div className="absolute inset-0 bg-neutral-900 group-hover:scale-105 transition-transform duration-700 overflow-hidden">
               {latestMedia?.imageUrls?.[0] ? (
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${latestMedia.imageUrls[0]})` }}></div>
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${getMediaUrl(latestMedia.imageUrls[0])})` }}></div>
               ) : latestMedia?.videoUrl ? (
                 <video 
-                  src={`${latestMedia.videoUrl}#t=1.0`} 
+                  src={`${getMediaUrl(latestMedia.videoUrl)}#t=1.0`} 
                   className="absolute inset-0 w-full h-full object-cover"
                   muted
                   playsInline
@@ -108,7 +109,7 @@ export default function BentoGrid({
             className="w-full h-full bg-[#1A1A1A] rounded-3xl p-8 border border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between relative overflow-hidden group hover:border-[var(--color-lgr-red)]/50 transition-colors"
           >
             {latestEvent?.imageUrls?.[0] && (
-              <div className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity duration-700" style={{ backgroundImage: `url(${latestEvent.imageUrls[0]})`}}></div>
+              <div className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity duration-700" style={{ backgroundImage: `url(${getMediaUrl(latestEvent.imageUrls[0])})`}}></div>
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
             

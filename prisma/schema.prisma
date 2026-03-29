@@ -12,11 +12,53 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String?
-  password  String   // Hashed password
+  password  String
   role      Role     @default(ADMIN)
-  posts     Post[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  slug      String   @unique @default(uuid())
+  title     String
+  content   String
+  category  Category @default(STARTY)
+  gpxUrl    String?
+  videoUrl  String?
+  imageUrls String[]
+  authorId  String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  distance  Float?
+  elevation Float?
+  routeData Json?
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model RaceResult {
+  id        String   @id @default(uuid())
+  eventName String
+  date      DateTime
+  name      String
+  category  String
+  time      String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminLog {
+  id        String   @id @default(uuid())
+  email     String
+  ip        String
+  userAgent String?
+  success   Boolean  @default(true)
+  action    String   @default("LOGIN")
+  details   String?
+  createdAt DateTime @default(now())
 }
 
 enum Role {
@@ -29,46 +71,4 @@ enum Category {
   STARTY
   WYDARZENIA
   INNE
-}
-
-model Post {
-  id        String   @id @default(uuid())
-  slug      String   @unique @default(uuid())
-  title     String
-  content   String   @db.Text
-  category  Category @default(STARTY)
-  gpxUrl    String?  // Map GPX route
-  videoUrl  String?  // MP4 Video URL
-  imageUrls String[] // Galleries
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  published Boolean  @default(false)
-  distance  Float?   
-  elevation Float?   
-  routeData Json?    
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model RaceResult {
-  id        String   @id @default(uuid())
-  eventName String   // np. "Maraton MTB Limanowa 2024"
-  date      DateTime
-  name      String   // Imię i nazwisko zawodnika
-  category  String   // Kategoria (M2, M3 itp.)
-  time      String   // Czas (np. 02:14:30)
-  position  Int      // Zajęte miejsce
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model AdminLog {
-  id        String   @id @default(uuid())
-  email     String
-  ip        String
-  userAgent String?
-  success   Boolean  @default(true)
-  action    String   @default("LOGIN") // LOGIN, LOGOUT, UPLOAD, DELETE
-  details   String?
-  createdAt DateTime @default(now())
 }

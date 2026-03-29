@@ -23,7 +23,7 @@ export const postSchema = z.object({
   content: z
     .string()
     .min(1, "Treść jest wymagana")
-    .max(500_000, "Treść zbyt długa"), // 500KB max for rich HTML
+    .max(30_000_000, "Treść jest niesamowicie długa (max 30MB) - upewnij się, że nie wklejasz zbyt wielu nieprzetworzonych zdjęć."), 
   category: z.enum(["STARTY", "WYDARZENIA", "INNE", "MEDIA"]),
 });
 

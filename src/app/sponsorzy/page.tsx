@@ -8,14 +8,14 @@ const SPONSORS = [
   { 
     name: "Gmina Słopnice", 
     desc: "Partner Strategiczny - wspierający rozwój kolarstwa w regionie Beskidu Wyspowego.",
-    image: "http://localhost:8080/sponsorzy/slopnice.png",
+    image: "http://192.168.1.32:8080/sponsorzy/slopnice.png",
     url: "https://www.slopnice.pl",
     isMain: true
   },
   { 
     name: "Sklep Rowerowy Sportman", 
     desc: "Nasz zaufany partner w zakresie serwisu i sprzętu najwyższej klasy.",
-    image: "http://localhost:8080/sponsorzy/sportman.png",
+    image: "http://192.168.1.32:8080/sponsorzy/sportman.png",
     url: "https://www.sportman.pl",
     isMain: true
   },

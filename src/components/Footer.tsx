@@ -60,9 +60,14 @@ export default function Footer() {
       </div>
 
       {/* Dolny Pasek Prawa Autorskie */}
-      <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-medium text-gray-500 uppercase tracking-widest">
-        <p>&copy; {(new Date()).getFullYear()} LIMANOWSKA GRUPA ROWEROWA. WSZYSTKIE PRAWA ZASTRZEŻONE.</p>
-        <div className="flex gap-8">
+      <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/5 flex flex-col items-center justify-between gap-6 md:flex-row text-xs font-medium text-gray-500 uppercase tracking-widest">
+        <div className="flex flex-col gap-1.5 items-center md:items-start text-center md:text-left">
+          <p>&copy; {(new Date()).getFullYear()} LIMANOWSKA GRUPA ROWEROWA. WSZYSTKIE PRAWA ZASTRZEŻONE.</p>
+          <p className="text-[10px] text-gray-600 normal-case tracking-wider">
+            Realizacja i wdrożenie: <span className="text-gray-400 font-bold">Krzysiek Jędrzejek</span> (<a href="mailto:kjedrzejek86@gmail.com" className="hover:text-white transition-colors">kjedrzejek86@gmail.com</a>)
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-6 md:gap-8">
           <Link href="/polityka" className="hover:text-white transition-colors">Polityka Prywatności</Link>
           <Link href="/regulamin" className="hover:text-white transition-colors">Regulamin</Link>
         </div>

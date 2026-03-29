@@ -122,6 +122,7 @@ export async function POST(req: Request) {
         let category: any = '';
         let postId: string | null = null;
         const mediaFiles: ParsedFile[] = [];
+        const retainedMedia: string[] = [];
 
         try {
             console.log("[DEBUG] Uruchamianie autorskiego parsera wielomegabajtowego...");
@@ -143,6 +144,7 @@ export async function POST(req: Request) {
                     if (part.name === 'content') content = val;
                     if (part.name === 'category') category = val;
                     if (part.name === 'postId') postId = val;
+                    if (part.name === 'retainedMedia') retainedMedia.push(val);
                 }
             }
             console.log("[DEBUG] Custom Parser wykonał zadanie bezbłędnie!");
@@ -198,8 +200,8 @@ export async function POST(req: Request) {
             const filePath = path.join(absoluteDir, safeName);
             console.log(`[DEBUG] Zapisywanie pliku: ${originalName} -> ${safeName} (Rozmiar: ${buffer.length} bajtów, Typ: ${file.contentType})`);
 
-            // Zawsze Unixowy styl ścieżek, powiązany z zewnętrznym URL lokalnym (na produkcji z podpiętą domeną)
-            const absoluteNetworkUrl = `${mediaBaseUrl}${relativeDir}/${safeName}`;
+            // Zapisujemy TYLKO relatywną ścieżkę (dynamiczne IP dorysuje frontend)
+            const relativeNetworkUrl = `${relativeDir}/${safeName}`;
 
             await fs.writeFile(filePath, buffer);
 
@@ -208,13 +210,13 @@ export async function POST(req: Request) {
             const isImage = file.contentType.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(safeName);
 
             if (isVideo) {
-                videoUrl = absoluteNetworkUrl; // Prisma wspiera jeden videoUrl dla posta wg Schema
+                videoUrl = relativeNetworkUrl; 
                 console.log(`[DEBUG] Zaklasyfikowano jako VIDEO: ${videoUrl}`);
             } else if (isImage) {
-                imageUrls.push(absoluteNetworkUrl);
-                console.log(`[DEBUG] Zaklasyfikowano jako ZDJĘCIE: ${absoluteNetworkUrl}`);
+                imageUrls.push(relativeNetworkUrl);
+                console.log(`[DEBUG] Zaklasyfikowano jako ZDJĘCIE: ${relativeNetworkUrl}`);
             } else if (isGpx) {
-                gpxUrl = absoluteNetworkUrl;
+                gpxUrl = relativeNetworkUrl;
                 console.log(`[DEBUG] Zaklasyfikowano jako MAPA GPX: ${gpxUrl}. Rozpoczynam parsowanie gpx...`);
                 
                 try {
@@ -249,20 +251,39 @@ export async function POST(req: Request) {
         let post;
 
         if (postId) {
-            // UPDATE existing post — keep old media unless new files were uploaded
+            // UPDATE existing post 
             const existing = await prisma.post.findUnique({ where: { id: postId } });
+            
+            // --- Inteligentne filtrowanie zachowanych mediów (odporne na IP) ---
+            const normalize = (u: string) => {
+                const match = u.match(/https?:\/\/[^\/]+(\/articles\/.+)/i);
+                return match ? match[1] : u;
+            };
+
+            const normalizedRetained = retainedMedia.map(normalize);
+
+            // Połączenie zachowanych starych zdjęć (relatywnych z bazy) z nowowgranymi
+            const existingImagesToKeep = (existing?.imageUrls ?? []).filter(url => 
+                normalizedRetained.includes(normalize(url))
+            );
+            const finalImageUrls = [...existingImagesToKeep, ...imageUrls];
+
+            // Weryfikacja czy video/gpx zostały zachowane (porównujemy tylko ścieżki relatywne)
+            const keepVideo = existing?.videoUrl && normalizedRetained.includes(normalize(existing.videoUrl));
+            const keepGpx = existing?.gpxUrl && normalizedRetained.includes(normalize(existing.gpxUrl));
+
             post = await prisma.post.update({
                 where: { id: postId },
                 data: {
                     title,
                     content,
                     category,
-                    videoUrl: videoUrl ?? existing?.videoUrl ?? null,
-                    imageUrls: imageUrls.length > 0 ? imageUrls : (existing?.imageUrls ?? []),
-                    gpxUrl: gpxUrl ?? existing?.gpxUrl ?? null,
-                    distance: distance ?? existing?.distance ?? null,
-                    elevation: elevation ?? existing?.elevation ?? null,
-                    routeData: routeData ?? existing?.routeData ?? null,
+                    videoUrl: videoUrl ?? (keepVideo ? existing?.videoUrl : null),
+                    imageUrls: finalImageUrls,
+                    gpxUrl: gpxUrl ?? (keepGpx ? existing?.gpxUrl : null),
+                    distance: distance ?? (keepGpx ? existing?.distance : null),
+                    elevation: elevation ?? (keepGpx ? existing?.elevation : null),
+                    routeData: routeData ?? (keepGpx ? existing?.routeData : null),
                 },
             });
         } else {

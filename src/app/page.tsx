@@ -62,7 +62,7 @@ export default async function Home() {
         <HeroSection />
       </div>
 
-      <main className="w-full relative z-20">
+      <div className="w-full relative z-20">
         <BentoGrid 
           latestRoute={latestRoute} 
           latestStart={latestStart}
@@ -78,7 +78,8 @@ export default async function Home() {
         <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-12 pb-32">
           <ResultsTable />
         </section>
-      </main>
+      </div>
     </div>
   );
 }
+

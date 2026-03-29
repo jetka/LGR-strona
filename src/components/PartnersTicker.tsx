@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 
 const PARTNERS = [
-  { name: "Gmina Słopnice", logo: "http://localhost:8080/sponsorzy/slopnice.png" },
-  { name: "Sportman", logo: "http://localhost:8080/sponsorzy/sportman.png" },
+  { name: "Gmina Słopnice", logo: "http://192.168.1.32:8080/sponsorzy/slopnice.png" },
+  { name: "Sportman", logo: "http://192.168.1.32:8080/sponsorzy/sportman.png" },
   { name: "LGR Limanowa", text: "LGR" },
   { name: "Małopolska", text: "MAŁOPOLSKA" },
   { name: "Bike Limanowa", text: "BIKE" },

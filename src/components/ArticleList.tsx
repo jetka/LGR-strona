@@ -3,12 +3,13 @@
 import { motion } from "framer-motion";
 import { Calendar, MapPin, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { getMediaUrl } from "@/lib/media";
 
-// The 3 images from lgr-media-server served via localhost:8080
+// The 3 images from lgr-media-server served via 192.168.1.32:8080
 const GALLERY_IMAGES = [
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
+    "http://192.168.1.32:8080/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
+    "http://192.168.1.32:8080/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
+    "http://192.168.1.32:8080/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
 ];
 
 function formatDate(date: Date) {
@@ -36,7 +37,7 @@ function ArticleCard({ post, index }: { post: any; index: number }) {
             <div className="relative w-full h-[45vh] md:h-[55vh] overflow-hidden mb-8 md:mb-12">
                 <div
                     className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-700"
-                    style={{ backgroundImage: `url(${heroImg})` }}
+                    style={{ backgroundImage: `url(${getMediaUrl(heroImg)})` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
 
@@ -84,7 +85,7 @@ function ArticleCard({ post, index }: { post: any; index: number }) {
                         {post.imageUrls.slice(1).map((src: string, i: number) => (
                             <div key={i}>
                                 <img
-                                    src={src}
+                                    src={getMediaUrl(src)}
                                     alt={`Zdjęcie ${i + 2}`}
                                     className="w-full max-h-[420px] object-cover"
                                 />

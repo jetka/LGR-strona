@@ -5,14 +5,15 @@ import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
 import { Calendar, ChevronDown, ArrowUpDown, SlidersHorizontal, Clock, Film, Image as ImageIcon } from "lucide-react";
 import dynamic from "next/dynamic";
+import { getMediaUrl } from "@/lib/media";
 
 const GPXMap = dynamic(() => import("./GPXMap"), { ssr: false });
 
-// Fallback images from local media server
+// Fallback images from local media server (relative paths)
 const FALLBACK_IMAGES = [
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
+    "/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
+    "/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
+    "/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
 ];
 
 function formatDate(date: Date, isMounted: boolean) {
@@ -26,7 +27,10 @@ function formatDate(date: Date, isMounted: boolean) {
 
 function PostCard({ post, index, basePath, isMounted }: { post: any; index: number; basePath: string; isMounted: boolean }) {
     const hasGpx = post.category === "INNE" && post.routeData && post.routeData.length > 0;
-    const img = !hasGpx ? (post.imageUrls?.[0] || (post.category === "INNE" ? "/trasyBG.jpg" : FALLBACK_IMAGES[index % FALLBACK_IMAGES.length])) : null;
+    
+    // Używamy getMediaUrl dla dynamiki IP
+    const rawImg = post.imageUrls?.[0] || (post.category === "INNE" ? "/trasyBG.jpg" : FALLBACK_IMAGES[index % FALLBACK_IMAGES.length]);
+    const img = !hasGpx ? (rawImg === "/trasyBG.jpg" ? rawImg : getMediaUrl(rawImg)) : null;
 
     if (!isMounted) {
         return <div className="group relative flex flex-col overflow-hidden rounded-xl bg-black border border-white/5 h-[340px] md:h-[380px]" />;

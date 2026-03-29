@@ -32,9 +32,9 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // needed for Next.js
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: http://localhost:8080 https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://cdnjs.cloudflare.com https://images.unsplash.com",
-      "media-src 'self' http://localhost:8080 blob:",
-      "connect-src 'self' http://localhost:8080 https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org",
+      "img-src * data: blob: 'unsafe-inline' 'self'",
+      "media-src * blob: 'self'",
+      "connect-src * 'unsafe-inline' 'self'",
       "frame-ancestors 'none'",
     ].join("; "),
   },
@@ -42,6 +42,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  images: {
+    remotePatterns: [
+      { protocol: "http", hostname: "**" },
+      { protocol: "https", hostname: "**" },
+    ],
+  },
   async headers() {
     return [
       {

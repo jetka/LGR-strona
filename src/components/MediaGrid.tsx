@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Play, Calendar, ArrowUpDown, Film, Image as ImageIcon } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
+import { getMediaUrl } from "@/lib/media";
 
 const FALLBACK_IMAGES = [
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
-    "http://localhost:8080/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
+    "/articles/2026-03-17-zdjecia/650846985_934486416005084_5088040843992929697_n.jpg",
+    "/articles/2026-03-17-zdjecia/650916792_934486516005074_8768591359964104230_n.jpg",
+    "/articles/2026-03-17-zdjecia/651005253_934486732671719_3895271009930800358_n.jpg",
 ];
 
 function formatDate(date: Date, isMounted: boolean) {
@@ -21,7 +22,8 @@ function formatDate(date: Date, isMounted: boolean) {
 }
 
 function MediaCard({ post, index, isFeatured, isMounted }: { post: any; index: number; isFeatured: boolean; isMounted: boolean }) {
-    const coverImage = post.imageUrls?.[0] || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+    const rawImage = post.imageUrls?.[0] || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+    const coverImage = getMediaUrl(rawImage);
     const hasVideo = !!post.videoUrl;
 
     const containerClasses = isFeatured
