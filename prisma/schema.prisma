@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  slug      String   @unique @default(uuid())
+  title     String
+  content   String
+  category  Category @default(STARTY)
+  gpxUrl    String?
+  videoUrl  String?
+  imageUrls String[]
+  authorId  String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  distance  Float?
+  elevation Float?
+  routeData Json?
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model RaceResult {
+  id        String   @id @default(uuid())
+  eventName String
+  date      DateTime
+  name      String
+  category  String
+  time      String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminLog {
+  id        String   @id @default(uuid())
+  email     String
+  ip        String
+  userAgent String?
+  success   Boolean  @default(true)
+  action    String   @default("LOGIN")
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  MEDIA
+  STARTY
+  WYDARZENIA
+  INNE
+}
