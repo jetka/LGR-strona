@@ -3,20 +3,28 @@
 import { motion } from "framer-motion";
 import { Handshake, Heart, ShieldCheck, Star } from "lucide-react";
 import Image from "next/image";
+import { getMediaUrl } from "@/lib/media";
 
 const SPONSORS = [
   { 
     name: "Gmina Słopnice", 
     desc: "Partner Strategiczny - wspierający rozwój kolarstwa w regionie Beskidu Wyspowego.",
-    image: "http://192.168.1.32:8080/sponsorzy/slopnice.png",
+    image: "/sponsorzy/slopnice.jpg",
     url: "https://www.slopnice.pl",
     isMain: true
   },
   { 
     name: "Sklep Rowerowy Sportman", 
     desc: "Nasz zaufany partner w zakresie serwisu i sprzętu najwyższej klasy.",
-    image: "http://192.168.1.32:8080/sponsorzy/sportman.png",
+    image: "/sponsorzy/sportman.jpg",
     url: "https://www.sportman.pl",
+    isMain: true
+  },
+  { 
+    name: "Rogelli", 
+    desc: "Nasz partner w zakresie najwyższej jakości odzieży kolarskiej.",
+    image: "/sponsorzy/rogelli.jpg",
+    url: "https://www.rogelli.pl",
     isMain: true
   },
   { 
@@ -74,7 +82,7 @@ export default function SponsorzyPage() {
                 <div className="w-48 h-48 md:w-56 md:h-56 bg-white/5 rounded-full flex items-center justify-center p-8 shadow-inner group-hover:scale-105 transition-transform duration-700">
                   {sponsor.image ? (
                     <img 
-                      src={sponsor.image} 
+                      src={getMediaUrl(sponsor.image)} 
                       alt={sponsor.name} 
                       className="w-full h-full object-contain filter drop-shadow-md"
                     />
@@ -118,7 +126,7 @@ export default function SponsorzyPage() {
               >
                 <div className="w-20 h-20 bg-white/5 rounded-xl flex items-center justify-center p-4">
                   {sponsor.image ? (
-                    <img src={sponsor.image} alt={sponsor.name} className="w-full h-full object-contain" />
+                    <img src={getMediaUrl(sponsor.image)} alt={sponsor.name} className="w-full h-full object-contain" />
                   ) : (
                     sponsor.icon
                   )}

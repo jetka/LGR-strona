@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// Polyfill dla starych wersji Node.js < 18.17 (na których potyka się Next.js przy revalidatePaths lub URLach)
+// Polyfill dla starych wersji Node.js < 18.17 
 if (typeof URL.canParse !== 'function') {
     (URL as any).canParse = function(url: string) {
         try {
@@ -76,7 +76,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 });
         }
 
-        // Always fetch authorId fresh from DB to avoid stale JWT token issues
         const sessionUser = await prisma.user.findUnique({
             where: { email: session.user.email },
             select: { id: true },
@@ -86,28 +85,11 @@ export async function POST(req: Request) {
         }
         const authorId = sessionUser.id;
         
-        // --- SEKCJA DEBUGOWANIA UNDICI ---
-        console.log("-----------------------------------------");
-        console.log("[DEBUG] Rozpoczęto wysyłanie formularza");
-        
         const contentType = req.headers.get('content-type') || '';
-        console.log("[DEBUG] Nagłówek Content-Type:", contentType);
-        
-        if (!contentType.includes('boundary=')) {
-            console.warn("[WARN] OSTRZEŻENIE: Brak 'boundary' w nagłówku Content-Type!");
-        } else {
-            console.log("[DEBUG] Znaleziono boundary:", contentType.split('boundary=')[1]);
-        }
-        
-        // Zbuforowanie całego ładunku do ArrayBuffer pozwala nam fizycznie zmierzyć
-        // czy przeglądarka podesłała kompletne pliki czy urwała połącznie
-        // Uwaga: po odczytaniu ciała (body), zrobimy kopię Requestu, by nie wyleciał błąd "body is disturbed"
         let rawBodyBuffer: Buffer;
         try {
             rawBodyBuffer = Buffer.from(await req.arrayBuffer());
-            console.log("[DEBUG] Pomyślnie pobrano w całości Body. Rozmiar:", (rawBodyBuffer.byteLength / 1024 / 1024).toFixed(3), "MB");
         } catch (bufferErr) {
-            console.error("[DEBUG-CRITICAL] Błąd odczytu surowego ArrayBuffer:", bufferErr);
             return NextResponse.json({ error: 'Nie udało się odczytać strumienia formularza' }, { status: 500 });
         }
 
@@ -125,7 +107,6 @@ export async function POST(req: Request) {
         const retainedMedia: string[] = [];
 
         try {
-            console.log("[DEBUG] Uruchamianie autorskiego parsera wielomegabajtowego...");
             const parts = parseMultipart(rawBodyBuffer, boundary);
             for (const part of parts) {
                 if (!part.name) continue;
@@ -147,60 +128,43 @@ export async function POST(req: Request) {
                     if (part.name === 'retainedMedia') retainedMedia.push(val);
                 }
             }
-            console.log("[DEBUG] Custom Parser wykonał zadanie bezbłędnie!");
         } catch (parserErr: any) {
-            console.error("[!!! BŁĄD CUSTOM PARSERA !!!]", parserErr);
             return NextResponse.json({ error: 'Błąd ramy autorskiego parsera' }, { status: 500 });
         }
 
-        // ── Zod Validation ──
         const validation = postSchema.safeParse({ title, content, category });
         if (!validation.success) {
             const msg = validation.error.issues?.[0]?.message || 'Nieprawidłowe dane formularza';
-            console.warn("[SECURITY] Zod validation failed:", msg);
             return NextResponse.json({ error: msg }, { status: 400 });
         }
         title = validation.data.title;
         content = validation.data.content;
         category = validation.data.category;
 
-        // 1. Generowanie ścieżek
         const today = new Date().toISOString().split('T')[0];
         const baseSlug = slugify(title, { lower: true, strict: true, locale: 'pl' });
         const uniqueSlug = `${baseSlug}-${Math.floor(Math.random() * 10000)}`;
         const dirName = `${today}-${baseSlug}`;
         const mediaRoot = process.env.MEDIA_ROOT_PATH || 'C:/vibeCoding/LGR strona/lgr-media-server';
-        const mediaBaseUrl = process.env.MEDIA_BASE_URL || 'http://localhost:8080';
         const relativeDir = `/articles/${dirName}`;
         const absoluteDir = path.join(mediaRoot, 'articles', dirName);
 
-        // Utworzenie folderów zewnętrznego Storage
         await fs.mkdir(absoluteDir, { recursive: true });
 
         let videoUrl: string | null = null;
         let gpxUrl: string | null = null;
         const imageUrls: string[] = [];
-        
-        // GPX stats
         let distance: number | null = null;
         let elevation: number | null = null;
         let routeData: any = null;
 
-        // Dynamic import GpxParser for processing GPX files
         const GpxParser = (await import('gpxparser')).default || require('gpxparser');
 
-        // 2. Zapisywanie plików
-        console.log(`[DEBUG] Rozpoczynam zapis: znaleziono ${mediaFiles.length} plików w przysłanym żądaniu.`);
         for (const file of mediaFiles) {
             const buffer = file.data;
             const originalName = file.filename || "nieznany_plik";
-            
-            // Proste usuwanie niebezpiecznych znaków z nazwy pliku
             const safeName = originalName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
             const filePath = path.join(absoluteDir, safeName);
-            console.log(`[DEBUG] Zapisywanie pliku: ${originalName} -> ${safeName} (Rozmiar: ${buffer.length} bajtów, Typ: ${file.contentType})`);
-
-            // Zapisujemy TYLKO relatywną ścieżkę (dynamiczne IP dorysuje frontend)
             const relativeNetworkUrl = `${relativeDir}/${safeName}`;
 
             await fs.writeFile(filePath, buffer);
@@ -211,73 +175,45 @@ export async function POST(req: Request) {
 
             if (isVideo) {
                 videoUrl = relativeNetworkUrl; 
-                console.log(`[DEBUG] Zaklasyfikowano jako VIDEO: ${videoUrl}`);
             } else if (isImage) {
                 imageUrls.push(relativeNetworkUrl);
-                console.log(`[DEBUG] Zaklasyfikowano jako ZDJĘCIE: ${relativeNetworkUrl}`);
             } else if (isGpx) {
                 gpxUrl = relativeNetworkUrl;
-                console.log(`[DEBUG] Zaklasyfikowano jako MAPA GPX: ${gpxUrl}. Rozpoczynam parsowanie gpx...`);
-                
                 try {
                     const gpxText = buffer.toString('utf-8');
                     const gpx = new GpxParser();
                     gpx.parse(gpxText);
-                    
-                    console.log(`[DEBUG] GPX Parser odczytał ścieżki: ${gpx.tracks?.length || 0}`);
-                    
                     if (gpx.tracks && gpx.tracks.length > 0) {
                         const track = gpx.tracks[0];
-                        distance = track.distance?.total != null ? parseFloat((track.distance.total / 1000).toFixed(2)) : 0; // in km
-                        elevation = track.elevation?.pos != null ? parseFloat((track.elevation.pos).toFixed(0)) : 0; // positive elevation gain in meters
-                        
-                        console.log(`[DEBUG] Obliczono z GPX - Dystans: ${distance} km, Przewyższenie: ${elevation} m+`);
-                        
-                        // Extract points (lat, lon, ele) for drawing on map
+                        distance = track.distance?.total != null ? parseFloat((track.distance.total / 1000).toFixed(2)) : 0;
+                        elevation = track.elevation?.pos != null ? parseFloat((track.elevation.pos).toFixed(0)) : 0;
                         routeData = track.points.map((p: any) => [p.lat, p.lon, p.ele || 0]);
-                        console.log(`[DEBUG] Ekstrakcja punktów trasy (RouteData) ukończona pomyślnie. Zliczono: ${routeData.length} punktów.`);
-                    } else {
-                        console.warn(`[WARN-GPX] Plik GPX nie zawiera dających się odczytać tras (sekcja <trk> wewnątrz <gpx> XML).`);
                     }
                 } catch (err) {
-                    console.error("[ERROR-GPX] Krytyczny błąd parsowania pliku GPX przez bibliotekę gpxparser:", err);
+                    // Fail silently
                 }
-            } else {
-                console.log(`[DEBUG] Zaklasyfikowano jako INNY plik: (Nazwa: ${safeName}, Rozmiar: ${buffer.length})`);
             }
         }
 
-        // 3. Create or UPDATE Post in Supabase via Prisma
         let post;
-
         if (postId) {
-            // UPDATE existing post 
             const existing = await prisma.post.findUnique({ where: { id: postId } });
-            
-            // --- Inteligentne filtrowanie zachowanych mediów (odporne na IP) ---
             const normalize = (u: string) => {
                 const match = u.match(/https?:\/\/[^\/]+(\/articles\/.+)/i);
                 return match ? match[1] : u;
             };
-
             const normalizedRetained = retainedMedia.map(normalize);
-
-            // Połączenie zachowanych starych zdjęć (relatywnych z bazy) z nowowgranymi
             const existingImagesToKeep = (existing?.imageUrls ?? []).filter(url => 
                 normalizedRetained.includes(normalize(url))
             );
             const finalImageUrls = [...existingImagesToKeep, ...imageUrls];
-
-            // Weryfikacja czy video/gpx zostały zachowane (porównujemy tylko ścieżki relatywne)
             const keepVideo = existing?.videoUrl && normalizedRetained.includes(normalize(existing.videoUrl));
             const keepGpx = existing?.gpxUrl && normalizedRetained.includes(normalize(existing.gpxUrl));
 
             post = await prisma.post.update({
                 where: { id: postId },
                 data: {
-                    title,
-                    content,
-                    category,
+                    title, content, category,
                     videoUrl: videoUrl ?? (keepVideo ? existing?.videoUrl : null),
                     imageUrls: finalImageUrls,
                     gpxUrl: gpxUrl ?? (keepGpx ? existing?.gpxUrl : null),
@@ -287,45 +223,28 @@ export async function POST(req: Request) {
                 },
             });
         } else {
-            // CREATE new post
             post = await prisma.post.create({
                 data: {
-                    title,
-                    slug: uniqueSlug,
-                    content,
-                    category,
-                    authorId,
-                    videoUrl,
-                    imageUrls,
-                    gpxUrl,
-                    distance,
-                    elevation,
-                    routeData,
+                    title, slug: uniqueSlug, content, category, authorId,
+                    videoUrl, imageUrls, gpxUrl, distance, elevation, routeData,
                 },
             });
         }
 
-        // Invalidate all listing pages so thumbnails update immediately
-        console.log(`[DEBUG] Artykuł zapisany w bazie! ID: ${post.id}. Revalidacja cache...`);
         try {
             revalidatePath('/starty');
             revalidatePath('/wydarzenia');
             revalidatePath('/trasy');
             revalidatePath('/media');
             revalidatePath('/');
-            console.log(`[DEBUG] Revalidacja cache zakończona sukcesem.`);
         } catch (revError) {
-            console.warn(`[WARN] Revalidacja zakończon błędem, ignoruję:`, revError);
+            // Fail silently
         }
 
-        return NextResponse.json({
-            success: true,
-            post,
-            mediaPaths: [...imageUrls, videoUrl].filter(Boolean)
-        });
+        return NextResponse.json({ success: true, post });
 
     } catch (error: any) {
         console.error('Upload Error:', error);
-        return NextResponse.json({ error: 'Wystąpił krytyczny błąd: ' + error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Wystąpił krytyczny błąd' }, { status: 500 });
     }
 }

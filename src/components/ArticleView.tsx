@@ -54,13 +54,21 @@ export default function ArticleView({ post }: { post: any }) {
 
     const heroImage = post.category === "INNE" ? "/trasyBG.jpg" : (images[0] || FALLBACK_IMAGES[0]);
 
+    const CATEGORY_PATHS: Record<string, string> = {
+        STARTY: "/starty",
+        WYDARZENIA: "/wydarzenia",
+        INNE: "/trasy",
+        MEDIA: "/media",
+    };
+    const backPath = CATEGORY_PATHS[post.category] || "/starty";
+
     return (
         <div className="w-full bg-transparent min-h-screen text-gray-200 relative pb-32">
 
             {/* ── BUTTON POWROTU ── */}
             <div className="absolute top-8 left-4 md:left-8 z-50">
                 <Link
-                    href=".."
+                    href={backPath}
                     className="flex items-center gap-2 bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest text-white hover:bg-[var(--color-lgr-red)] transition-all"
                 >
                     <ArrowLeft size={14} /> Powrót
@@ -224,14 +232,14 @@ export default function ArticleView({ post }: { post: any }) {
                                 <p className="text-gray-500 text-sm font-medium italic">Kliknij zdjęcie, aby powiększyć →</p>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 auto-rows-fr">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 auto-rows-fr">
                                 {images.map((src: string, index: number) => (
                                     <motion.div
                                         key={index}
                                         layoutId={`img-${index}`}
                                         onClick={() => setSelectedImage(index)}
                                         whileHover={{ scale: 1.02 }}
-                                        className="relative aspect-[4/5] cursor-pointer overflow-hidden rounded-2xl bg-[#111] border border-white/5 group"
+                                        className="relative aspect-square md:aspect-[4/5] cursor-pointer overflow-hidden rounded-lg md:rounded-2xl bg-[#111] border border-white/5 group shadow-lg"
                                     >
                                         <Image
                                             src={src}
@@ -239,11 +247,11 @@ export default function ArticleView({ post }: { post: any }) {
                                             fill
                                             unoptimized
                                             className="object-cover grayscale-[40%] group-hover:grayscale-0 transition-all duration-700"
-                                            sizes="(max-width: 768px) 100vw, 33vw"
+                                            sizes="(max-width: 768px) 50vw, 33vw"
                                         />
                                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                                        <div className="absolute bottom-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <ZoomIn size={20} />
+                                        <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md">
+                                            <ZoomIn size={16} className="md:w-5 md:h-5" />
                                         </div>
                                     </motion.div>
                                 ))}

@@ -5,8 +5,9 @@ import Image from "next/image";
 import { getMediaUrl } from "@/lib/media";
 
 const PARTNERS = [
-  { name: "Gmina Słopnice", logo: "/sponsorzy/slopnice.png" },
-  { name: "Sportman", logo: "/sponsorzy/sportman.png" },
+  { name: "Gmina Słopnice", logo: "/sponsorzy/slopnice.jpg" },
+  { name: "Sportman", logo: "/sponsorzy/sportman.jpg" },
+  { name: "Rogelli", logo: "/sponsorzy/rogelli.jpg" },
   { name: "LGR Team", text: "#LGRTEAM" },
 ];
 

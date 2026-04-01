@@ -95,10 +95,7 @@ export default function HomeLatestPosts({ posts }: { posts: any[] }) {
                                         sizes="(max-width: 768px) 100vw, 33vw"
                                     />
                                 </div>
-                                {/* DEBUG: Wyświetl URL jeśli nie widać obrazka (widoczne tylko przy błędzie/braku tła) */}
-                                <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 text-[8px] text-white/20 break-all pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {img}
-                                </div>
+
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/10 group-hover:via-black/70 transition-all duration-500" />
                                 <div className="absolute bottom-0 left-0 h-[3px] w-0 bg-[var(--color-lgr-red)] group-hover:w-full transition-all duration-500 ease-out" />
 
